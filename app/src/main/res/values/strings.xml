@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">CinemaApp</string>
+    <string name="poster">Постер фильма</string>
+    <string name="plot_content_description">Сюжет фильма</string>
+    <string name="back_button_content">Назад</string>
+    <string name="watch_button">Смотреть</string>
+    <string name="short_description">Краткое описание:</string>
+    <string name="plot">Сюжет:</string>
+    <string name="genres">Жанры:</string>
+    <string name="recommended_title">Рекомендуем к просмотру:</string>
+    <string name="view_all_button">Все</string>
+    <string name="continue_watching_title">Продолжить просмотр</string>
+    <string name="genres_title">Жанры</string>
+    <string name="recommended_list_description">Список рекомендуемых фильмов</string>
+    <string name="continue_watching_list_description">Список фильмов для продолжения просмотра</string>
+</resources>
