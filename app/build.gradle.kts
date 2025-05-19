@@ -1,3 +1,5 @@
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,9 +10,15 @@ android {
     namespace = "com.example.cinemaapp"
     compileSdk = 35
 
+
+    packaging {
+        resources.excludes.add("lib/arm64-v8a/libmigui.so")
+        resources.excludes.add("lib/armeabi-v7a/libmigui.so")
+    }
+
     defaultConfig {
         applicationId = "com.example.cinemaapp"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"

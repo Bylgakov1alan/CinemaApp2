@@ -4,13 +4,18 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.WindowManager
+import android.widget.ImageButton
+import android.widget.Toast
+import androidx.media3.ui.PlayerView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerView
+
 
 class PlayerActivity : AppCompatActivity() {
     private var player: ExoPlayer? = null
@@ -28,51 +33,79 @@ class PlayerActivity : AppCompatActivity() {
                 ExoPlayer.STATE_ENDED -> "ExoPlayer.STATE_ENDED"
                 else -> "UNKNOWN_STATE"
             }
-            println("Changed state to $stateString")
+            Log.d("PlayerActivity", "Changed state to $stateString")
+        }
+
+        override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+            Log.e("PlayerActivity", "Playback error: ${error.message}")
+            Toast.makeText(this@PlayerActivity, "Ошибка воспроизведения: ${error.message}", Toast.LENGTH_LONG).show()
+            finish()
         }
     }
 
+    @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_player)
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_FULLSCREEN,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN
+        )
+        // Скрыть Action Bar, если он есть
+        supportActionBar?.hide()
+        // Скрыть системные панели (статус-бар и навигационная панель)
+        window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                )
+        // Настройка слушателя видимости контроллеров
+        val playerView = findViewById<PlayerView>(R.id.playerView)
+        playerView.setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
+            findViewById<ImageButton>(R.id.backButton).visibility = visibility
+        })
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
+            finish() // Закрываем активность, возвращаемся к MovieDetailsFragment
+        }
+
     }
 
     @UnstableApi
-    override fun onStart() {
-        super.onStart()
-        initializePlayer()
+    override fun onResume() {
+        super.onResume()
+        if (player == null) {
+            initializePlayer()
+        }
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onPause() {
+        super.onPause()
         releasePlayer()
     }
 
     @SuppressLint("UseKtx")
     @UnstableApi
     private fun initializePlayer() {
-        // 1. Создаём экземпляр ExoPlayer
+        val videoUrl = intent.getStringExtra("VIDEO_URL")
+        if (videoUrl.isNullOrEmpty()) {
+            Log.e("PlayerActivity", "Video URL is missing")
+            finish() // Закрываем активность, если URL отсутствует
+            return
+        }
+        val videoUri = Uri.parse(videoUrl)
+        val playerView = findViewById<PlayerView>(R.id.playerView)
+
         player = ExoPlayer.Builder(this)
-            .setSeekForwardIncrementMs(10000) // Перемотка вперёд на 10 сек
-            .setSeekBackIncrementMs(10000)    // Перемотка назад на 10 сек
+            .setSeekForwardIncrementMs(10000)
+            .setSeekBackIncrementMs(10000)
             .build()
-            .also { exoPlayer ->
-                // 2. Настраиваем PlayerView
-                val playerView = findViewById<PlayerView>(R.id.playerView)
-                playerView.player = exoPlayer
-
-                // 3. Получаем URL видео из интента
-                val videoUri = Uri.parse(intent.getStringExtra("VIDEO_URL"))
-
-                // 4. Создаём MediaItem
-                val mediaItem = MediaItem.fromUri(videoUri)
-
-                // 5. Подготавливаем плеер
-                exoPlayer.setMediaItem(mediaItem)
-                exoPlayer.playWhenReady = playWhenReady
-                exoPlayer.seekTo(currentWindow, playbackPosition)
-                exoPlayer.addListener(playbackStateListener)
-                exoPlayer.prepare()
+            .apply {
+                playerView.player = this
+                setMediaItem(MediaItem.fromUri(videoUri))
+                playWhenReady = this@PlayerActivity.playWhenReady
+                seekTo(playbackPosition)
+                addListener(playbackStateListener)
+                prepare()
             }
     }
 

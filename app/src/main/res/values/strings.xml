@@ -13,4 +13,8 @@
     <string name="genres_title">Жанры</string>
     <string name="recommended_list_description">Список рекомендуемых фильмов</string>
     <string name="continue_watching_list_description">Список фильмов для продолжения просмотра</string>
+    <string name="register">Register</string>
+    <string name="name">Name</string>
+    <string name="password">Password</string>
+    <string name="email">Email</string>
 </resources>

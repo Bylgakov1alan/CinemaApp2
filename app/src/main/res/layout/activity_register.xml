@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/white">
+
+    <EditText
+        android:id="@+id/editTextEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:hint="@string/email"
+        android:textColor="@color/black"
+        android:textColorHint="@color/gray"
+        android:inputType="textEmailAddress"
+        android:importantForAutofill="yes"
+        android:autofillHints="email"/>
+
+    <EditText
+        android:id="@+id/editTextPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:hint="@string/password"
+        android:textColor="@color/black"
+        android:textColorHint="@color/gray"
+        android:inputType="textPassword"
+        android:importantForAutofill="yes"
+        android:autofillHints="password"/>
+
+    <EditText
+        android:id="@+id/editTextName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:hint="@string/name"
+        android:textColor="@color/black"
+        android:textColorHint="@color/gray"
+        android:inputType="textPersonName"
+        android:importantForAutofill="yes"
+        android:autofillHints="name"/>
+
+    <Button
+        android:id="@+id/buttonRegister"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="120dp"
+        android:minHeight="48dp"
+        android:text="@string/register"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Поле и кнопка для ввода кода -->
+    <EditText
+        android:id="@+id/editTextCode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:hint="Enter 6-digit code"
+        android:textColor="@color/black"
+        android:textColorHint="@color/gray"
+        android:inputType="number"
+        android:maxLength="6"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/buttonVerify"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="120dp"
+        android:minHeight="48dp"
+        android:text="Verify"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/loginButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Already have an account? Login" />
+
+</LinearLayout>

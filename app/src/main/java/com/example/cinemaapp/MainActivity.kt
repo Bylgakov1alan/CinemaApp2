@@ -1,5 +1,6 @@
 package com.example.cinemaapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -9,6 +10,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -34,7 +36,13 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_profile -> {
-                    Toast.makeText(this, "Профиль", Toast.LENGTH_SHORT).show()
+                    val sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE)
+                    val token = sharedPreferences.getString("auth_token", null)
+                    if (token != null) {
+                        startActivity(Intent(this, ProfileActivity::class.java))
+                    } else {
+                        startActivity(Intent(this, RegisterActivity::class.java))
+                    }
                     true
                 }
                 else -> false
