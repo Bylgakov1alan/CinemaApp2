@@ -1,35 +1,24 @@
 package com.example.cinemaapp
 
-import Movie
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import com.example.cinemaapp.models.Movie
+import com.example.cinemaapp.models.RegisterRequest
+import com.example.cinemaapp.models.RegisterResponse
+import com.example.cinemaapp.models.VerifyCodeRequest
+import com.example.cinemaapp.models.VerifyCodeResponse
+import retrofit2.Call
+import retrofit2.http.Body
 import retrofit2.http.GET
-
+import retrofit2.http.POST
 
 interface MovieApiService {
+    @POST("register")
+    fun registerUser(@Body request: RegisterRequest): Call<RegisterResponse>
+
+    @POST("verify-code")
+    fun verifyCode(@Body request: VerifyCodeRequest): Call<VerifyCodeResponse>
+
     @GET("api/movies")
-    suspend fun getMovies(): List<Movie>
-
-    companion object {
-        const val BASE_URL = "http://192.168.0.101:5000/"
-        const val VIDEO_BASE = BASE_URL
-
-        fun create(): MovieApiService {
-            val logging = HttpLoggingInterceptor().apply {
-                setLevel(HttpLoggingInterceptor.Level.BODY)
-            }
-            val client = OkHttpClient.Builder()
-                .addInterceptor(logging)
-                .build()
-
-            return Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client)
-                .build()
-                .create(MovieApiService::class.java)
-        }
-    }
+    fun getMovies(): Call<List<Movie>>
 }
+
+

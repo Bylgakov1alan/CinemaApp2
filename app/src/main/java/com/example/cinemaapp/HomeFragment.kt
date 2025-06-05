@@ -1,7 +1,5 @@
 package com.example.cinemaapp
 
-import Movie
-
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
@@ -10,30 +8,25 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.launch
+import com.example.cinemaapp.models.Movie
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class HorizontalSpacingItemDecoration(private val spacing: Int) : RecyclerView.ItemDecoration() {
-    override fun getItemOffsets(
-        outRect: Rect,
-        view: View,
-        parent: RecyclerView,
-        state: RecyclerView.State
-    ) {
+    override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
         outRect.right = spacing
     }
 }
 
 class HomeFragment : Fragment() {
-    private lateinit var movieApiService: MovieApiService
     private lateinit var recommendedAdapter: MovieAdapter
     private lateinit var continueAdapter: MovieAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        movieApiService = MovieApiService.create()
     }
 
     override fun onCreateView(
@@ -72,21 +65,24 @@ class HomeFragment : Fragment() {
             addItemDecoration(HorizontalSpacingItemDecoration(spacing))
         }
 
-        lifecycleScope.launch {
-            try {
-                val movies = movieApiService.getMovies()
-                Log.d("HomeFragment", "Movies loaded: ${movies.size}")
-                recommendedAdapter.updateMovies(movies)
-                continueAdapter.updateMovies(movies.shuffled())
-            } catch (e: Exception) {
-                Log.e("HomeFragment", "Error loading movies", e)
-                Toast.makeText(
-                    requireContext(),
-                    "Ошибка загрузки: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+        // Место, куда вставляем обновлённую часть для загрузки фильмов
+        ApiClient.apiService.getMovies().enqueue(object : Callback<List<Movie>> {
+            override fun onResponse(call: Call<List<Movie>>, response: Response<List<Movie>>) {
+                if (response.isSuccessful) {
+                    val movies = response.body() ?: emptyList()
+                    Log.d("HomeFragment", "Movies loaded: ${movies.size}")
+                    recommendedAdapter.updateMovies(movies)
+                    continueAdapter.updateMovies(movies.shuffled())
+                } else {
+                    Toast.makeText(requireContext(), "Failed to load movies: ${response.code()}", Toast.LENGTH_SHORT).show()
+                }
             }
-        }
+
+            override fun onFailure(call: Call<List<Movie>>, t: Throwable) {
+                Log.e("HomeFragment", "Error loading movies", t)
+                Toast.makeText(requireContext(), "Ошибка загрузки: ${t.message}", Toast.LENGTH_LONG).show()
+            }
+        })
 
         return view
     }

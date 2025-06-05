@@ -28,7 +28,13 @@ class MainActivity : AppCompatActivity() {
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
-                    Toast.makeText(this, "Главная", Toast.LENGTH_SHORT).show()
+                    // Проверяем, не является ли текущий фрагмент уже HomeFragment
+                    val currentFragment = supportFragmentManager.findFragmentById(R.id.content_frame)
+                    if (currentFragment !is HomeFragment) {
+                        supportFragmentManager.beginTransaction()
+                            .replace(R.id.content_frame, HomeFragment())
+                            .commit()
+                    }
                     true
                 }
                 R.id.nav_search -> {
@@ -46,8 +52,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 else -> false
-            }
-        }
+            }}
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()

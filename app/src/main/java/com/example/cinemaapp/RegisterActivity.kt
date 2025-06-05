@@ -8,11 +8,13 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import org.json.JSONObject
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.IOException
+import com.example.cinemaapp.models.RegisterRequest
+import com.example.cinemaapp.models.RegisterResponse
+import com.example.cinemaapp.models.VerifyCodeRequest
+import com.example.cinemaapp.models.VerifyCodeResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -65,33 +67,16 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun registerUser(email: String, password: String, name: String) {
-        val json = JSONObject()
-        json.put("email", email)
-        json.put("password", password)
-        json.put("name", name)
+        val request = RegisterRequest(email, password, name)
+        val call = ApiClient.apiService.registerUser(request)
 
-        val requestBody = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
-
-        val request = Request.Builder()
-            .url("http://192.168.0.101:5000/register")
-            .post(requestBody)
-            .build()
-
-        OkHttpClient().newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                runOnUiThread {
-                    Toast.makeText(this@RegisterActivity, "Registration failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onResponse(call: Call, response: Response) {
+        call.enqueue(object : Callback<RegisterResponse> {
+            override fun onResponse(call: Call<RegisterResponse>, response: Response<RegisterResponse>) {
                 if (response.isSuccessful) {
-                    val responseBody = response.body?.string()
-                    val jsonResponse = JSONObject(responseBody ?: "{}")
-                    registeredEmail = jsonResponse.getString("email")
+                    val registerResponse = response.body()
+                    registeredEmail = registerResponse?.email
                     runOnUiThread {
                         Toast.makeText(this@RegisterActivity, "Check your email for the code", Toast.LENGTH_SHORT).show()
-                        // Показываем поле для кода и кнопку
                         emailEditText.visibility = View.GONE
                         passwordEditText.visibility = View.GONE
                         nameEditText.visibility = View.GONE
@@ -101,47 +86,36 @@ class RegisterActivity : AppCompatActivity() {
                     }
                 } else {
                     runOnUiThread {
-                        Toast.makeText(this@RegisterActivity, "Registration failed: ${response.code}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@RegisterActivity, "Registration failed: ${response.code()}", Toast.LENGTH_SHORT).show()
                     }
+                }
+            }
+
+            override fun onFailure(call: Call<RegisterResponse>, t: Throwable) {
+                runOnUiThread {
+                    Toast.makeText(this@RegisterActivity, "Registration failed: ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         })
     }
 
     private fun verifyCode(email: String, code: String) {
-        val json = JSONObject()
-        json.put("email", email)
-        json.put("code", code)
+        val request = VerifyCodeRequest(email, code)
+        val call = ApiClient.apiService.verifyCode(request)
 
-        val requestBody = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
-
-        val request = Request.Builder()
-            .url("http://192.168.0.101:5000/verify-code")
-            .post(requestBody)
-            .build()
-
-        OkHttpClient().newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                runOnUiThread {
-                    Toast.makeText(this@RegisterActivity, "Verification failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-
+        call.enqueue(object : Callback<VerifyCodeResponse> {
             @SuppressLint("UseKtx")
-            override fun onResponse(call: Call, response: Response) {
+            override fun onResponse(call: Call<VerifyCodeResponse>, response: Response<VerifyCodeResponse>) {
                 if (response.isSuccessful) {
-                    val responseBody = response.body?.string()
-                    val jsonResponse = JSONObject(responseBody ?: "{}")
-                    val name = jsonResponse.getString("name")
+                    val verifyResponse = response.body()
+                    val name = verifyResponse?.name
                     runOnUiThread {
                         Toast.makeText(this@RegisterActivity, "Verification successful", Toast.LENGTH_SHORT).show()
-                        // Сохраняем имя пользователя
                         val sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE)
                         with(sharedPreferences.edit()) {
                             putString("user_name", name)
                             apply()
                         }
-                        // Переходим в ProfileActivity
                         startActivity(Intent(this@RegisterActivity, ProfileActivity::class.java))
                         finish()
                     }
@@ -149,6 +123,12 @@ class RegisterActivity : AppCompatActivity() {
                     runOnUiThread {
                         Toast.makeText(this@RegisterActivity, "Invalid code", Toast.LENGTH_SHORT).show()
                     }
+                }
+            }
+
+            override fun onFailure(call: Call<VerifyCodeResponse>, t: Throwable) {
+                runOnUiThread {
+                    Toast.makeText(this@RegisterActivity, "Verification failed: ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         })

@@ -58,7 +58,7 @@ class LoginActivity : AppCompatActivity() {
         val requestBody = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
 
         val request = Request.Builder()
-            .url("http://192.168.0.101:5000/login")
+            .url("http://192.168.0.103:5000/api/login")
             .post(requestBody)
             .build()
 

@@ -1,7 +1,7 @@
 package com.example.cinemaapp
 
-import Movie
 import android.annotation.SuppressLint
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,17 +9,33 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import java.net.URLEncoder
+import com.example.cinemaapp.models.Movie
 
 class MovieAdapter(
     private var movies: List<Movie>,
     private val onClick: (Movie) -> Unit
-) : RecyclerView.Adapter<MovieAdapter.MovieViewHolder>() {
+) : RecyclerView.Adapter<MovieAdapter.ViewHolder>() {
 
-    inner class MovieViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val poster: ImageView = itemView.findViewById(R.id.moviePoster)
-        val title: TextView = itemView.findViewById(R.id.movieTitle)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_movie, parent, false)
+        return ViewHolder(view)
     }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val movie = movies[position]
+        holder.itemView.setOnClickListener { onClick(movie) }
+
+        val posterUrl = "${ApiClient.BASE_URL}poster/${movie.posterUrl}"// Adjust based on URL structure
+        Glide.with(holder.itemView.context)
+            .load(posterUrl)
+            .placeholder(android.R.drawable.ic_menu_gallery)
+            .error(android.R.drawable.ic_menu_report_image)
+            .into(holder.poster)
+
+        holder.title.text = movie.title
+    }
+
+    override fun getItemCount() = movies.size
 
     @SuppressLint("NotifyDataSetChanged")
     fun updateMovies(newMovies: List<Movie>) {
@@ -27,26 +43,8 @@ class MovieAdapter(
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MovieViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_movie, parent, false)
-        return MovieViewHolder(view)
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val poster: ImageView = itemView.findViewById(R.id.moviePoster)
+        val title: TextView = itemView.findViewById(R.id.movieTitle)
     }
-
-    override fun onBindViewHolder(holder: MovieViewHolder, position: Int) {
-        val movie = movies[position]
-        val posterUrl = "${MovieApiService.BASE_URL}poster/${URLEncoder.encode(movie.posterUrl.split("/").last(), "UTF-8")}"
-
-        Glide.with(holder.itemView.context)
-            .load(posterUrl)
-            .placeholder(R.drawable.ic_android_black_24dp)
-            .error(R.drawable.error_poster)
-            .into(holder.poster)
-
-        holder.title.text = movie.title
-        holder.itemView.setOnClickListener { onClick(movie) }
-    }
-
-    override fun getItemCount() = movies.size
-
 }

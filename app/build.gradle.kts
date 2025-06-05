@@ -14,6 +14,9 @@ android {
     packaging {
         resources.excludes.add("lib/arm64-v8a/libmigui.so")
         resources.excludes.add("lib/armeabi-v7a/libmigui.so")
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 
     defaultConfig {
