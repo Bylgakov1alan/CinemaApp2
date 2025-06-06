@@ -116,7 +116,7 @@ class RegisterActivity : AppCompatActivity() {
                             putString("user_name", name)
                             apply()
                         }
-                        startActivity(Intent(this@RegisterActivity, ProfileActivity::class.java))
+                        startActivity(Intent(this@RegisterActivity, ProfileFragment::class.java))
                         finish()
                     }
                 } else {

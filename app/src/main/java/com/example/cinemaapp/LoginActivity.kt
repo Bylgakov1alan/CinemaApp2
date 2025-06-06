@@ -2,7 +2,6 @@ package com.example.cinemaapp
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -75,7 +74,7 @@ class LoginActivity : AppCompatActivity() {
                     val token = jsonResponse.getString("token")
                     saveToken(token)
                     runOnUiThread {
-                        startActivity(Intent(this@LoginActivity, ProfileActivity::class.java))
+                        startActivity(Intent(this@LoginActivity, ProfileFragment::class.java))
                         finish()
                     }
                 } else {

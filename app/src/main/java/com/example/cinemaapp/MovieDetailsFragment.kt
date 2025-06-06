@@ -1,6 +1,5 @@
 package com.example.cinemaapp
-// 1. Импорты (добавляются автоматически при нажатии Alt+Enter на ошибках)
-import com.example.cinemaapp.models.Movie
+
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -14,14 +13,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.example.cinemaapp.databinding.FragmentMovieDetailsBinding
+import com.example.cinemaapp.models.FavoriteRequest
+import com.example.cinemaapp.models.FavoriteResponse
+import com.example.cinemaapp.models.Movie
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 @Suppress("DEPRECATION")
 class MovieDetailsFragment : Fragment() {
-    // 2. Binding-переменная
     private var _binding: FragmentMovieDetailsBinding? = null
     private val binding get() = _binding!!
+    private var isFavorite = false
 
-    // 3. Создание View
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -31,7 +35,6 @@ class MovieDetailsFragment : Fragment() {
         return binding.root
     }
 
-    // 4. Логика после создания View
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val movie = try {
@@ -48,27 +51,7 @@ class MovieDetailsFragment : Fragment() {
             return
         }
 
-        val plot = binding.moviePlot
-        var sostoyanyeplot = false
-
-        plot.setOnClickListener {
-            sostoyanyeplot = !sostoyanyeplot
-            if (sostoyanyeplot) {
-                plot.maxLines = Integer.MAX_VALUE // Показываем все строки
-                plot.ellipsize = null           // Убираем троеточие
-            } else {
-                plot.maxLines = 2                // Ограничиваем 2 строками
-                plot.ellipsize = TextUtils.TruncateAt.END // Добавляем троеточие
-            }
-        }
-
-        binding.backButton.setOnClickListener {
-            if (activity is AppCompatActivity) {
-                (activity as AppCompatActivity).onBackPressed()
-            }
-        }
-
-        // 2. Заполняем данные
+        // Заполняем данные
         binding.movieTitle.text = movie.title
         binding.movieDescriptionFull.text = movie.description
         binding.moviePlot.text = movie.plot
@@ -79,8 +62,116 @@ class MovieDetailsFragment : Fragment() {
             .error(R.drawable.error_poster)
             .into(binding.moviePoster)
 
+        // Логика для раскрытия/сворачивания сюжета
+        val plot = binding.moviePlot
+        var sostoyanyeplot = false
+        plot.setOnClickListener {
+            sostoyanyeplot = !sostoyanyeplot
+            if (sostoyanyeplot) {
+                plot.maxLines = Integer.MAX_VALUE
+                plot.ellipsize = null
+            } else {
+                plot.maxLines = 2
+                plot.ellipsize = TextUtils.TruncateAt.END
+            }
+        }
+
+        binding.backButton.setOnClickListener {
+            if (activity is AppCompatActivity) {
+                (activity as AppCompatActivity).onBackPressed()
+            }
+        }
+
         binding.playButton.setOnClickListener {
             playVideo(movie)
+        }
+
+        // Проверяем, в избранном ли фильм
+        checkIfFavorite(movie)
+
+        // Обработчики кнопок избранного
+        binding.addToFavoritesButton.setOnClickListener {
+            addToFavorites(movie)
+        }
+
+        binding.removeFromFavoritesButton.setOnClickListener {
+            removeFromFavorites(movie)
+        }
+    }
+
+    private fun checkIfFavorite(movie: Movie) {
+        ApiClient.apiService.getFavorites().enqueue(object : Callback<List<Movie>> {
+            override fun onResponse(call: Call<List<Movie>>, response: Response<List<Movie>>) {
+                if (response.isSuccessful) {
+                    val favorites = response.body() ?: emptyList()
+                    isFavorite = favorites.any { it.id == movie.id }
+                    updateFavoriteButtonVisibility()
+                } else {
+                    showError("Не удалось проверить избранное: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<List<Movie>>, t: Throwable) {
+                showError("Ошибка при проверке избранного: ${t.message}")
+            }
+        })
+    }
+
+    private fun addToFavorites(movie: Movie) {
+        val request = FavoriteRequest(movieId = movie.id)
+        ApiClient.apiService.addToFavorites(request).enqueue(object : Callback<FavoriteResponse> {
+            override fun onResponse(call: Call<FavoriteResponse>, response: Response<FavoriteResponse>) {
+                if (response.isSuccessful) {
+                    val favoriteResponse = response.body()
+                    if (favoriteResponse?.error == null) {
+                        isFavorite = true
+                        updateFavoriteButtonVisibility()
+                        showMessage("Фильм добавлен в избранное")
+                    } else {
+                        showError(favoriteResponse.error ?: "Неизвестная ошибка")
+                    }
+                } else {
+                    showError("Не удалось добавить в избранное: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<FavoriteResponse>, t: Throwable) {
+                showError("Ошибка при добавлении: ${t.message}")
+            }
+        })
+    }
+
+    private fun removeFromFavorites(movie: Movie) {
+        val request = FavoriteRequest(movieId = movie.id)
+        ApiClient.apiService.removeFromFavorites(request).enqueue(object : Callback<FavoriteResponse> {
+            override fun onResponse(call: Call<FavoriteResponse>, response: Response<FavoriteResponse>) {
+                if (response.isSuccessful) {
+                    val favoriteResponse = response.body()
+                    if (favoriteResponse?.error == null) {
+                        isFavorite = false
+                        updateFavoriteButtonVisibility()
+                        showMessage("Фильм удалён из избранного")
+                    } else {
+                        showError(favoriteResponse.error?: "Неизвестная ошибка")
+                    }
+                } else {
+                    showError("Не удалось удалить из избранного: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<FavoriteResponse>, t: Throwable) {
+                showError("Ошибка при удалении: ${t.message}")
+            }
+        })
+    }
+
+    private fun updateFavoriteButtonVisibility() {
+        if (isFavorite) {
+            binding.addToFavoritesButton.visibility = View.GONE
+            binding.removeFromFavoritesButton.visibility = View.VISIBLE
+        } else {
+            binding.addToFavoritesButton.visibility = View.VISIBLE
+            binding.removeFromFavoritesButton.visibility = View.GONE
         }
     }
 
@@ -90,7 +181,7 @@ class MovieDetailsFragment : Fragment() {
             return
         }
 
-        val fullVideoUrl = "${ApiClient.BASE_URL}movie/${videoUrl}" // Полный путь к видео
+        val fullVideoUrl = "${ApiClient.BASE_URL}movie/${videoUrl}"
         if (!isValidUrl(fullVideoUrl)) {
             showError("Некорректный URL видео")
             return
@@ -116,6 +207,10 @@ class MovieDetailsFragment : Fragment() {
     }
 
     private fun showError(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showMessage(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 

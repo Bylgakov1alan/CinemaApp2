@@ -1,12 +1,14 @@
 package com.example.cinemaapp
 
-import android.content.Intent
+
 import android.os.Bundle
+
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
@@ -28,13 +30,10 @@ class MainActivity : AppCompatActivity() {
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
-                    // Проверяем, не является ли текущий фрагмент уже HomeFragment
-                    val currentFragment = supportFragmentManager.findFragmentById(R.id.content_frame)
-                    if (currentFragment !is HomeFragment) {
-                        supportFragmentManager.beginTransaction()
-                            .replace(R.id.content_frame, HomeFragment())
-                            .commit()
-                    }
+                    val homeFragment = HomeFragment()
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.content_frame, homeFragment)
+                        .commit()
                     true
                 }
                 R.id.nav_search -> {
@@ -42,18 +41,17 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_profile -> {
-                    val sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE)
-                    val token = sharedPreferences.getString("auth_token", null)
-                    if (token != null) {
-                        startActivity(Intent(this, ProfileActivity::class.java))
-                    } else {
-                        startActivity(Intent(this, RegisterActivity::class.java))
-                    }
+                    val profileFragment = ProfileFragment()
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.content_frame, profileFragment)
+                        .commit()
                     true
                 }
                 else -> false
-            }}
+            }
+        }
 
+        // При запуске показываем HomeFragment
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.content_frame, HomeFragment())

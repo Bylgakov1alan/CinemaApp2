@@ -1,5 +1,7 @@
 package com.example.cinemaapp
 
+import com.example.cinemaapp.models.FavoriteRequest
+import com.example.cinemaapp.models.FavoriteResponse
 import com.example.cinemaapp.models.Movie
 import com.example.cinemaapp.models.RegisterRequest
 import com.example.cinemaapp.models.RegisterResponse
@@ -19,6 +21,13 @@ interface MovieApiService {
 
     @GET("api/movies")
     fun getMovies(): Call<List<Movie>>
+
+    @POST("api/favorites/add")
+    fun addToFavorites(@Body request: FavoriteRequest): Call<FavoriteResponse>
+
+    @POST("api/favorites/remove")
+    fun removeFromFavorites(@Body request: FavoriteRequest): Call<FavoriteResponse>
+
+    @GET("api/favorites")
+    fun getFavorites(): Call<List<Movie>>
 }
-
-
