@@ -74,7 +74,12 @@ class LoginActivity : AppCompatActivity() {
                     val token = jsonResponse.getString("token")
                     saveToken(token)
                     runOnUiThread {
-                        startActivity(Intent(this@LoginActivity, ProfileFragment::class.java))
+                        // Запускаем MainActivity и передаём флаг для открытия ProfileFragment
+                        val intent = Intent(this@LoginActivity, MainActivity::class.java).apply {
+                            putExtra("navigate_to_profile", true)
+                        }
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
                         finish()
                     }
                 } else {

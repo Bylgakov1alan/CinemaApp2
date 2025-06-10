@@ -1,14 +1,11 @@
 package com.example.cinemaapp
 
-
 import android.os.Bundle
-
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
@@ -51,11 +48,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // При запуске показываем HomeFragment
+        // При запуске или после логина/регистрации проверяем флаг
         if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.content_frame, HomeFragment())
-                .commit()
+            val navigateToProfile = intent.getBooleanExtra("navigate_to_profile", false)
+            if (navigateToProfile) {
+                val profileFragment = ProfileFragment()
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.content_frame, profileFragment)
+                    .commit()
+                // Устанавливаем активный элемент меню
+                bottomNav.selectedItemId = R.id.nav_profile
+            } else {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.content_frame, HomeFragment())
+                    .commit()
+            }
         }
     }
 }
