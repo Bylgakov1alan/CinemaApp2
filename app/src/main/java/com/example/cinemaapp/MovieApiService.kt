@@ -30,4 +30,7 @@ interface MovieApiService {
 
     @GET("api/favorites")
     fun getFavorites(): Call<List<Movie>>
+
+    @GET("api/recommendations")
+    fun getRecommendations(): Call<List<Movie>>
 }

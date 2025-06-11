@@ -1,7 +1,9 @@
 package com.example.cinemaapp
 
+
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -10,47 +12,47 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 @SuppressLint("StaticFieldLeak")
 object ApiClient {
-    const val BASE_URL = "http://192.168.0.103:5000/"
-    const val VIDEO_BASE = "http://192.168.0.103:5000/video/"
+    const val BASE_URL = "http://192.168.0.108:5000/"
 
-    private lateinit var context: Context // Для доступа к сохранённым данным
+    private var context: Context? = null // Nullable to avoid memory leaks
 
-    // Инициализация (вызовется при старте приложения)
     fun initialize(context: Context) {
-        this.context = context
+        this.context = context.applicationContext
     }
 
     private val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = HttpLoggingInterceptor.Level.BASIC // Changed to BASIC for performance
     }
 
-    // Помощник, который добавляет токен к запросам
     private val authInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
-
-        // Достаём токен из памяти телефона
-        val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+        val ctx = context ?: return@Interceptor chain.proceed(originalRequest)
+        val prefs = ctx.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
         val token = prefs.getString("auth_token", null) ?: ""
-
-        // Если токен есть - добавляем его в заголовок
+        Log.d("ApiClient", "Request URL: ${originalRequest.url}, Token: $token")
         val newRequest = originalRequest.newBuilder()
             .header("Authorization", "Bearer $token")
             .build()
-
         chain.proceed(newRequest)
     }
 
-    // Настраиваем клиента с нашим помощником
-    private val client = OkHttpClient.Builder()
-        .addInterceptor(logging)   // для логов
-        .addInterceptor(authInterceptor) // наш помощник с токеном
-        .build()
+    private val client: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .addInterceptor(authInterceptor)
+            .build()
+    }
 
-    val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
-        .addConverterFactory(GsonConverterFactory.create())
-        .client(client)
-        .build()
+    private val retrofit: Retrofit by lazy {
+        val ctx = context ?: throw IllegalStateException("ApiClient not initialized")
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+            .build()
+    }
 
-    val apiService: MovieApiService = retrofit.create(MovieApiService::class.java)
+    val apiService: MovieApiService by lazy {
+        retrofit.create(MovieApiService::class.java)
+    }
 }

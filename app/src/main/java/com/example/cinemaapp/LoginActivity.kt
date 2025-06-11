@@ -57,7 +57,7 @@ class LoginActivity : AppCompatActivity() {
         val requestBody = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
 
         val request = Request.Builder()
-            .url("http://192.168.0.103:5000/api/login")
+            .url("http://192.168.0.108:5000/api/login")
             .post(requestBody)
             .build()
 
@@ -96,7 +96,15 @@ class LoginActivity : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE)
         with(sharedPreferences.edit()) {
             putString("auth_token", token)
+            putLong("token_timestamp", System.currentTimeMillis()) // Track when token was saved
             apply()
         }
+        Log.d("LoginActivity", "Token saved: $token")
     }
-}
+
+    private fun isTokenExpired(): Boolean {
+        val sharedPreferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE)
+        val timestamp = sharedPreferences.getLong("token_timestamp", 0)
+        val expirationTime = 24 * 60 * 60 * 1000L // 24 hours in milliseconds
+        return System.currentTimeMillis() - timestamp > expirationTime
+    }}
